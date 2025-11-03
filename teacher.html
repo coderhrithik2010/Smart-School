@@ -1,0 +1,161 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Teacher Panel — Smart Classroom</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">📘 Smart Classroom — Teacher Panel</div>
+    <nav><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a></nav>
+  </header>
+
+  <main class="container">
+    <h2 id="classTitle">Loading classroom...</h2>
+
+    <section class="card">
+      <h3>Student list & quick marks entry</h3>
+      <p class="muted">Add names below, enter marks and click <b>Save Marks</b>.</p>
+      <div id="studentsArea"></div>
+      <div style="margin-top:12px;">
+        <input id="newStudent" placeholder="Add student name (e.g. Rohan)"/>
+        <button id="addStudentBtn">Add student</button>
+      </div>
+      <div style="margin-top:12px;">
+        <button id="saveMarksBtn">💾 Save Marks</button>
+        <button id="clearBtn" style="background:#ef4444">Clear All Marks</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Marks analytics</h3>
+      <canvas id="marksChart"></canvas>
+    </section>
+
+    <section class="card">
+      <h3>Submit Complaint</h3>
+      <input id="teacherName" placeholder="Teacher name (e.g. Mr. Sharma)"/>
+      <textarea id="complaintText" placeholder="Describe complaint..." style="width:100%;height:90px;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #ddd"></textarea>
+      <div style="margin-top:8px;">
+        <button id="submitComplaintBtn">Submit Complaint</button>
+      </div>
+      <div id="complaintsList" style="margin-top:12px"></div>
+    </section>
+  </main>
+
+  <footer class="footer">Teachers: data you enter updates live for everyone.</footer>
+
+<script>
+  // Firebase config (injected)
+  const firebaseConfig = {"apiKey": "AIzaSyAmrwroeecIVIF1itF9MDPROquyXie-Rrc", "authDomain": "smart-classroom-3d35a.firebaseapp.com", "databaseURL": "https://smart-classroom-3d35a-default-rtdb.firebaseio.com", "projectId": "smart-classroom-3d35a", "storageBucket": "smart-classroom-3d35a.firebasestorage.app", "messagingSenderId": "880063756991", "appId": "1:880063756991:web:be8946acca3d771711240a", "measurementId": "G-1V9K25838R"};
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Get class from URL or default
+  const params = new URLSearchParams(window.location.search);
+  const className = params.get('class') || 'class9A';
+  document.getElementById('classTitle').innerText = 'Classroom: ' + className;
+
+  const marksRef = db.ref('classes/' + className + '/marks');
+  const complaintsRef = db.ref('classes/' + className + '/complaints');
+
+  // UI helpers
+  const studentsArea = document.getElementById('studentsArea');
+  const defaultStudents = ['Rohan','Priya','Aman','Neha','Kartik']; // editable starting list
+  let students = [];
+
+  function renderStudents(data) {
+    studentsArea.innerHTML = '';
+    students = data && Object.keys(data).length ? Object.keys(data) : defaultStudents;
+    students.forEach(name => {
+      const val = (data && data[name]) ? data[name] : '';
+      const row = document.createElement('div');
+      row.style.marginTop = '8px';
+      row.innerHTML = `<input data-name="${name}" class="sname" value="${name}" style="width:48%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-right:6px"/>
+                       <input type="number" min="0" max="100" data-mark="${name}" value="${val}" placeholder="Marks %" style="width:48%;padding:8px;border-radius:6px;border:1px solid #ddd"/>`;
+      studentsArea.appendChild(row);
+    });
+  }
+
+  // Load existing marks
+  marksRef.on('value', snapshot => {
+    const data = snapshot.val() || {};
+    renderStudents(data);
+    updateChart(data);
+  });
+
+  // Add student
+  document.getElementById('addStudentBtn').addEventListener('click', () => {
+    const name = document.getElementById('newStudent').value.trim();
+    if(!name) return alert('Enter student name');
+    // add locally
+    const entry = {};
+    entry[name] = '';
+    marksRef.update(entry);
+    document.getElementById('newStudent').value = '';
+  });
+
+  // Save marks
+  document.getElementById('saveMarksBtn').addEventListener('click', () => {
+    const inputs = document.querySelectorAll('input[data-mark]');
+    const updates = {};
+    inputs.forEach(i => {
+      const name = i.getAttribute('data-mark');
+      const value = parseInt(i.value) || 0;
+      updates[name] = value;
+    });
+    marksRef.set(updates);
+    alert('Marks saved ✅');
+  });
+
+  // Clear all marks
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if(confirm('Clear all marks for this class?')) {
+      marksRef.remove();
+    }
+  });
+
+  // Chart
+  let chart;
+  function updateChart(data) {
+    const names = Object.keys(data || {});
+    const vals = names.map(n => data[n] || 0);
+    const ctx = document.getElementById('marksChart');
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: names, datasets: [{ label: 'Marks (%)', data: vals, backgroundColor: '#2563eb' }] },
+      options: { responsive:true, scales:{ y:{ beginAtZero:true, max:100 } } }
+    });
+  }
+
+  // Complaints
+  document.getElementById('submitComplaintBtn').addEventListener('click', () => {
+    const teacher = document.getElementById('teacherName').value.trim();
+    const text = document.getElementById('complaintText').value.trim();
+    if(!teacher || !text) return alert('Fill teacher name and complaint');
+    const newC = complaintsRef.push();
+    newC.set({ teacher, text, time: new Date().toLocaleString() });
+    document.getElementById('teacherName').value = '';
+    document.getElementById('complaintText').value = '';
+  });
+
+  complaintsRef.on('value', snapshot => {
+    const cdiv = document.getElementById('complaintsList');
+    const data = snapshot.val() || {};
+    cdiv.innerHTML = '<h4>Recent complaints</h4>';
+    Object.values(data).reverse().forEach(c => {
+      const p = document.createElement('p');
+      p.innerHTML = `<b>${c.teacher}</b>: ${c.text} <br><i style="color:#6b7280">${c.time}</i>`;
+      cdiv.appendChild(p);
+    });
+  });
+</script>
+</body>
+</html>

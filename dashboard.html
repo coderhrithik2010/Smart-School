@@ -1,0 +1,90 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Principal Dashboard — Smart Classroom</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">📊 Principal Dashboard</div>
+    <nav><a href="index.html">Home</a><a href="teacher.html">Teacher Panel</a></nav>
+  </header>
+
+  <main class="container">
+    <h2>School overview</h2>
+
+    <section class="card">
+      <h3>Pick a classroom</h3>
+      <input id="classPicker" placeholder="Enter class code, e.g. class9A"/>
+      <button id="loadClassBtn">Load Classroom Data</button>
+    </section>
+
+    <section class="card">
+      <h3>Class Marks Snapshot</h3>
+      <canvas id="classChart"></canvas>
+    </section>
+
+    <section class="card">
+      <h3>Recent Complaints (All Classes)</h3>
+      <div id="allComplaints"></div>
+    </section>
+  </main>
+
+  <footer class="footer">Realtime data from Firebase.</footer>
+
+<script>
+  const firebaseConfig = {"apiKey": "AIzaSyAmrwroeecIVIF1itF9MDPROquyXie-Rrc", "authDomain": "smart-classroom-3d35a.firebaseapp.com", "databaseURL": "https://smart-classroom-3d35a-default-rtdb.firebaseio.com", "projectId": "smart-classroom-3d35a", "storageBucket": "smart-classroom-3d35a.firebasestorage.app", "messagingSenderId": "880063756991", "appId": "1:880063756991:web:be8946acca3d771711240a", "measurementId": "G-1V9K25838R"};
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const classPicker = document.getElementById('classPicker');
+  const loadBtn = document.getElementById('loadClassBtn');
+  let classChart;
+
+  loadBtn.addEventListener('click', () => {
+    const cls = classPicker.value.trim();
+    if(!cls) return alert('Enter a class code');
+    loadClass(cls);
+  });
+
+  function loadClass(cls) {
+    const marksRef = db.ref('classes/' + cls + '/marks');
+    marksRef.on('value', snap => {
+      const data = snap.val() || {};
+      const names = Object.keys(data);
+      const vals = names.map(n => data[n] || 0);
+
+      const ctx = document.getElementById('classChart');
+      if(classChart) classChart.destroy();
+      classChart = new Chart(ctx, {
+        type:'bar',
+        data:{ labels:names, datasets:[{ label: cls + ' — Marks (%)', data: vals, backgroundColor:'#2563eb' }] },
+        options:{ scales:{ y:{ beginAtZero:true, max:100 } } }
+      });
+    });
+  }
+
+  // Show complaints from all classes
+  const complaintsRef = db.ref('classes');
+  complaintsRef.on('value', snap => {
+    const data = snap.val() || {};
+    const div = document.getElementById('allComplaints');
+    div.innerHTML = '';
+    Object.keys(data).forEach(cls => {
+      const cobj = data[cls].complaints || {};
+      Object.values(cobj).forEach(c => {
+        const p = document.createElement('p');
+        p.innerHTML = `<b>[${cls}] ${c.teacher}</b>: ${c.text} <br><i style="color:#6b7280">${c.time}</i>`;
+        div.appendChild(p);
+      });
+    });
+  });
+</script>
+</body>
+</html>
