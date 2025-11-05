@@ -39,14 +39,19 @@
     </section>
 
     <section class="card">
-      <h3>Submit Complaint</h3>
-      <input id="teacherName" placeholder="Teacher name (e.g. Mr. Sharma)"/>
-      <textarea id="complaintText" placeholder="Describe complaint..." style="width:100%;height:90px;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #ddd"></textarea>
-      <div style="margin-top:8px;">
-        <button id="submitComplaintBtn">Submit Complaint</button>
-      </div>
-      <div id="complaintsList" style="margin-top:12px"></div>
-    </section>
+  <h3>Submit Complaint</h3>
+  <input id="teacherName" placeholder="Teacher name (e.g. Mr. Sharma)"/>
+  <textarea id="complaintText" placeholder="Describe complaint..." style="width:100%;height:90px;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #ddd"></textarea>
+  <div style="margin-top:8px;">
+    <button id="submitComplaintBtn">Submit Complaint</button>
+  </div>
+</section>
+
+<section class="card">
+  <h3>Your Class Complaints</h3>
+  <div id="complaintsTableArea"></div>
+</section>
+
   </main>
 
   <footer class="footer">Teachers: data you enter updates live for everyone.</footer>
@@ -135,27 +140,69 @@
     });
   }
 
-  // Complaints
-  document.getElementById('submitComplaintBtn').addEventListener('click', () => {
-    const teacher = document.getElementById('teacherName').value.trim();
-    const text = document.getElementById('complaintText').value.trim();
-    if(!teacher || !text) return alert('Fill teacher name and complaint');
-    const newC = complaintsRef.push();
-    newC.set({ teacher, text, time: new Date().toLocaleString() });
-    document.getElementById('teacherName').value = '';
-    document.getElementById('complaintText').value = '';
+// === Complaints Management for this class ===
+document.getElementById('submitComplaintBtn').addEventListener('click', () => {
+  const teacher = document.getElementById('teacherName').value.trim();
+  const text = document.getElementById('complaintText').value.trim();
+  if (!teacher || !text) return alert('Please fill teacher name and complaint');
+  const newC = complaintsRef.push();
+  newC.set({
+    teacher,
+    text,
+    time: new Date().toLocaleString(),
+    status: 'Unresolved'
   });
+  document.getElementById('teacherName').value = '';
+  document.getElementById('complaintText').value = '';
+});
 
-  complaintsRef.on('value', snapshot => {
-    const cdiv = document.getElementById('complaintsList');
-    const data = snapshot.val() || {};
-    cdiv.innerHTML = '<h4>Recent complaints</h4>';
-    Object.values(data).reverse().forEach(c => {
-      const p = document.createElement('p');
-      p.innerHTML = `<b>${c.teacher}</b>: ${c.text} <br><i style="color:#6b7280">${c.time}</i>`;
-      cdiv.appendChild(p);
-    });
+// Render complaint table for this class
+complaintsRef.on('value', snapshot => {
+  const data = snapshot.val() || {};
+  const area = document.getElementById('complaintsTableArea');
+  area.innerHTML = `
+    <table border="1" style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:#2563eb;color:white;">
+          <th>Teacher</th><th>Complaint</th><th>Time</th><th>Status</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="complaintsBody"></tbody>
+    </table>
+  `;
+  const body = document.getElementById('complaintsBody');
+
+  Object.entries(data).forEach(([id, c]) => {
+    const status = c.status || 'Unresolved';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.teacher}</td>
+      <td>${c.text}</td>
+      <td><i style="color:#6b7280">${c.time}</i></td>
+      <td>${status}</td>
+      <td>
+        <button style="background:#16a34a" onclick="markResolved('${id}')">✔ Resolve</button>
+        <button style="background:#facc15;color:#000" onclick="markUnresolved('${id}')">↺ Unresolve</button>
+        <button style="background:#ef4444" onclick="deleteComplaint('${id}')">🗑 Delete</button>
+      </td>
+    `;
+    body.appendChild(tr);
   });
+});
+
+// === Local class complaint functions ===
+function markResolved(id) {
+  complaintsRef.child(id).update({ status: 'Resolved' });
+}
+function markUnresolved(id) {
+  complaintsRef.child(id).update({ status: 'Unresolved' });
+}
+function deleteComplaint(id) {
+  if (confirm('Delete this complaint?')) {
+    complaintsRef.child(id).remove();
+  }
+}
+
 </script>
 </body>
 </html>
