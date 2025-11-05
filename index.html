@@ -20,42 +20,38 @@
     <h1>Welcome to Smart Classroom</h1>
     <p class="lead">Each classroom gets a QR code. Scan it to open its live dashboard.</p>
 
-    <section class="card">
-      <h2>Open a classroom (by code or QR)</h2>
-      <p>Example class codes: <code> 10 A </code>, <code>class10B</code></p>
-      <div class="row">
-        <input id="classInput" placeholder="Enter class code (e.g. class9A)"/>
-        <button id="openBtn">Open Classroom</button>
-      </div>
+   <section class="card">
+  <h2>Open a Classroom</h2>
+  <p>Select your class to open its teacher panel.</p>
+  <div class="row">
+    <select id="classSelect">
+      <option value="">-- Select Class --</option>
+    </select>
+  </div>
+</section>
 
-    <section class="card small">
-      <h3>Quick links</h3>
-      <div class="grid">
-        <a class="btn" href="teacher.html">Teacher Panel</a>
-        <a class="btn" href="dashboard.html">Principal Dashboard</a>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">Made by Hrithik Kumar Arya</footer>
-
-  <script>
-    // Open classroom by class code
-    document.getElementById('openBtn').addEventListener('click', function() {
-      var code = document.getElementById('classInput').value.trim();
-      if(!code) return alert('Enter a class code (e.g. class9A)');
-      window.location = 'teacher.html?class=' + encodeURIComponent(code);
+<script>
+  const classSelect = document.getElementById("classSelect");
+  const sections = {};
+  for (let i = 1; i <= 10; i++) {
+    const secs = (i === 8) ? ['A','B','C','D'] : ['A','B','C'];
+    sections[i] = secs;
+  }
+  Object.entries(sections).forEach(([num, secs]) => {
+    secs.forEach(sec => {
+      const val = `class${num}${sec}`;
+      const opt = document.createElement("option");
+      opt.value = val;
+      opt.textContent = `Class ${num} ${sec}`;
+      classSelect.appendChild(opt);
     });
+  });
 
-    // If URL contains ?class=..., open teacher panel for that class
-    (function(){
-      var params = new URLSearchParams(window.location.search);
-      var cls = params.get('class');
-      if(cls) {
-        var open = confirm('Open teacher panel for ' + cls + '? Press OK to open.');
-        if(open) window.location = 'teacher.html?class=' + encodeURIComponent(cls);
-      }
-    })();
-  </script>
+  classSelect.addEventListener("change", () => {
+    const cls = classSelect.value;
+    if (cls) window.location = "teacher.html?class=" + encodeURIComponent(cls);
+  });
+</script>
+
 </body>
 </html>
