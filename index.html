@@ -1,0 +1,62 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart School Environment</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">📘 Smart School Environment </div>
+    <nav>
+      <a href="teacher.html">Teacher Panel</a>
+      <a href="dashboard.html">Principal Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Welcome to Smart Classroom</h1>
+    <p class="lead">Each classroom gets a QR code. Scan it to open its live dashboard.</p>
+
+    <section class="card">
+  <h3>Pick a classroom</h3>
+  <select id="classPicker">
+    <option value="">-- Select Class --</option>
+  </select>
+  <button id="loadClassBtn">Load Classroom Data</button>
+</section>
+
+
+    <section class="card small">
+      <h3>Quick links</h3>
+      <div class="grid">
+        <a class="btn" href="teacher.html">Teacher Panel</a>
+        <a class="btn" href="dashboard.html">Principal Dashboard</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Made By Hrithik Kumar Arya </footer>
+
+  <script>
+    // Open classroom by class code
+    document.getElementById('openBtn').addEventListener('click', function() {
+      var code = document.getElementById('classInput').value.trim();
+      if(!code) return alert('Enter a class code (e.g. class9A)');
+      window.location = 'teacher.html?class=' + encodeURIComponent(code);
+    });
+
+    // If URL contains ?class=..., open teacher panel for that class
+    (function(){
+      var params = new URLSearchParams(window.location.search);
+      var cls = params.get('class');
+      if(cls) {
+        var open = confirm('Open teacher panel for ' + cls + '? Press OK to open.');
+        if(open) window.location = 'teacher.html?class=' + encodeURIComponent(cls);
+      }
+    })();
+  </script>
+</body>
+</html>
