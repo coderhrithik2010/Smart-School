@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart School Environment</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">📘 Smart School Environment</div>
+    <nav>
+      <a href="dashboard.html">Principal Dashboard</a>
+      <a href="#" onclick="openTeacherPanel()">Teacher Panel</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Smart School Environment</h1>
+    <p class="lead">Manage classes, marks, attendance, and activities easily.</p>
+
+    <section class="card small">
+      <h2>Welcome</h2>
+      <div class="grid" style="justify-content:center;">
+        <a class="btn" href="dashboard.html">Principal Dashboard</a>
+        <button class="btn" onclick="openTeacherPanel()">Teacher Panel</button>
+      </div>
+    </section>
+
+    <section id="teacherSelectSection" class="card small" style="display:none;">
+      <h3>Select Your Class</h3>
+      <select id="classSelect" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;">
+        <option value="">-- Choose a Class --</option>
+      </select>
+    </section>
+  </main>
+
+  <footer class="footer">Made with ❤️ by Hrithik Kumar Arya</footer>
+
+  <script>
+    // Build class dropdown dynamically
+    const classSelect = document.getElementById("classSelect");
+    const teacherSelectSection = document.getElementById("teacherSelectSection");
+
+    const sections = {};
+    for (let i = 1; i <= 10; i++) {
+      const secs = (i === 8) ? ['A','B','C','D'] : ['A','B','C'];
+      sections[i] = secs;
+    }
+
+    Object.entries(sections).forEach(([num, secs]) => {
+      secs.forEach(sec => {
+        const val = `class${num}${sec}`;
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = `Class ${num} ${sec}`;
+        classSelect.appendChild(opt);
+      });
+    });
+
+    function openTeacherPanel() {
+      teacherSelectSection.style.display = "block";
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    classSelect.addEventListener("change", () => {
+      const cls = classSelect.value;
+      if (cls) window.location = "teacher.html?class=" + encodeURIComponent(cls);
+    });
+  </script>
+</body>
+</html>
