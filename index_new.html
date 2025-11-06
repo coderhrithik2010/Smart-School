@@ -27,45 +27,65 @@
       </div>
     </section>
 
+    <!-- Teacher panel -->
     <section id="teacherSelectSection" class="card small" style="display:none;">
-      <h3>Select Your Class</h3>
-      <select id="classSelect" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;">
-        <option value="">-- Choose a Class --</option>
-      </select>
+      <h3>Select Your Class & Section</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <!-- Class Dropdown -->
+        <select id="classSelect" style="flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;">
+          <option value="">-- Choose Class --</option>
+        </select>
+
+        <!-- Section Dropdown -->
+        <select id="sectionSelect" style="flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;">
+          <option value="">-- Choose Section --</option>
+        </select>
+      </div>
+
+      <button id="goBtn" class="btn" style="margin-top:15px;">Go</button>
     </section>
   </main>
 
   <footer class="footer">Made with ❤️ by Hrithik Kumar Arya</footer>
 
   <script>
-    // Build class dropdown dynamically
     const classSelect = document.getElementById("classSelect");
+    const sectionSelect = document.getElementById("sectionSelect");
     const teacherSelectSection = document.getElementById("teacherSelectSection");
+    const goBtn = document.getElementById("goBtn");
 
-    const sections = {};
+    // Fill classes (1–10)
     for (let i = 1; i <= 10; i++) {
-      const secs = (i === 8) ? ['A','B','C','D'] : ['A','B','C'];
-      sections[i] = secs;
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Class ${i}`;
+      classSelect.appendChild(opt);
     }
 
-    Object.entries(sections).forEach(([num, secs]) => {
-      secs.forEach(sec => {
-        const val = `class${num}${sec}`;
-        const opt = document.createElement("option");
-        opt.value = val;
-        opt.textContent = `Class ${num} ${sec}`;
-        classSelect.appendChild(opt);
-      });
+    // Fill sections (A–C)
+    ['A', 'B', 'C'].forEach(sec => {
+      const opt = document.createElement("option");
+      opt.value = sec;
+      opt.textContent = `Section ${sec}`;
+      sectionSelect.appendChild(opt);
     });
 
+    // Show teacher panel
     function openTeacherPanel() {
       teacherSelectSection.style.display = "block";
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    classSelect.addEventListener("change", () => {
+    // Go button click → redirect to teacher.html
+    goBtn.addEventListener("click", () => {
       const cls = classSelect.value;
-      if (cls) window.location = "teacher.html?class=" + encodeURIComponent(cls);
+      const sec = sectionSelect.value;
+      if (!cls || !sec) {
+        alert("Please select both class and section!");
+        return;
+      }
+      const fullClass = `class${cls}${sec}`;
+      window.location = "teacher.html?class=" + encodeURIComponent(fullClass);
     });
   </script>
 </body>
