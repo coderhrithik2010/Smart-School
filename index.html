@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,54 +8,85 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">📘 Smart School Environment </div>
+    <div class="brand">📘 Smart School Environment</div>
     <nav>
-      <a href="teacher.html">Teacher Panel</a>
       <a href="dashboard.html">Principal Dashboard</a>
+      <a href="#" onclick="openTeacherPanel()">Teacher Panel</a>
     </nav>
   </header>
 
   <main class="container">
-    <h1>Welcome to Smart Classroom</h1>
-    <p class="lead">Each classroom gets a QR code. Scan it to open its live dashboard.</p>
-
-    <section class="card">
-  <h3>Pick a classroom</h3>
-  <select id="classPicker">
-    <option value="">-- Select Class --</option>
-  </select>
-  <button id="loadClassBtn">Load Classroom Data</button>
-</section>
-
+    <h1>Smart School Environment</h1>
+    <p class="lead">Manage classes, marks, attendance, and activities easily.</p>
 
     <section class="card small">
-      <h3>Quick links</h3>
-      <div class="grid">
-        <a class="btn" href="teacher.html">Teacher Panel</a>
+      <h2>Welcome</h2>
+      <div class="grid" style="justify-content:center;">
         <a class="btn" href="dashboard.html">Principal Dashboard</a>
+        <button class="btn" onclick="openTeacherPanel()">Teacher Panel</button>
       </div>
+    </section>
+
+    <!-- Teacher panel -->
+    <section id="teacherSelectSection" class="card small" style="display:none;">
+      <h3>Select Your Class & Section</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <!-- Class Dropdown -->
+        <select id="classSelect" style="flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;">
+          <option value="">-- Choose Class --</option>
+        </select>
+
+        <!-- Section Dropdown -->
+        <select id="sectionSelect" style="flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;">
+          <option value="">-- Choose Section --</option>
+        </select>
+      </div>
+
+      <button id="goBtn" class="btn" style="margin-top:15px;">Go</button>
     </section>
   </main>
 
-  <footer class="footer">Made By Hrithik Kumar Arya </footer>
+  <footer class="footer">Made with ❤️ by Hrithik Kumar Arya</footer>
 
   <script>
-    // Open classroom by class code
-    document.getElementById('openBtn').addEventListener('click', function() {
-      var code = document.getElementById('classInput').value.trim();
-      if(!code) return alert('Enter a class code (e.g. class9A)');
-      window.location = 'teacher.html?class=' + encodeURIComponent(code);
+    const classSelect = document.getElementById("classSelect");
+    const sectionSelect = document.getElementById("sectionSelect");
+    const teacherSelectSection = document.getElementById("teacherSelectSection");
+    const goBtn = document.getElementById("goBtn");
+
+    // Fill classes (1–10)
+    for (let i = 1; i <= 10; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Class ${i}`;
+      classSelect.appendChild(opt);
+    }
+
+    // Fill sections (A–C)
+    ['A', 'B', 'C'].forEach(sec => {
+      const opt = document.createElement("option");
+      opt.value = sec;
+      opt.textContent = `Section ${sec}`;
+      sectionSelect.appendChild(opt);
     });
 
-    // If URL contains ?class=..., open teacher panel for that class
-    (function(){
-      var params = new URLSearchParams(window.location.search);
-      var cls = params.get('class');
-      if(cls) {
-        var open = confirm('Open teacher panel for ' + cls + '? Press OK to open.');
-        if(open) window.location = 'teacher.html?class=' + encodeURIComponent(cls);
+    // Show teacher panel
+    function openTeacherPanel() {
+      teacherSelectSection.style.display = "block";
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    // Go button click → redirect to teacher.html
+    goBtn.addEventListener("click", () => {
+      const cls = classSelect.value;
+      const sec = sectionSelect.value;
+      if (!cls || !sec) {
+        alert("Please select both class and section!");
+        return;
       }
-    })();
+      const fullClass = `class${cls}${sec}`;
+      window.location = "teacher.html?class=" + encodeURIComponent(fullClass);
+    });
   </script>
 </body>
 </html>
